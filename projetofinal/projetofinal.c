@@ -5,12 +5,12 @@
 #define MAX_HISTORICO 100
 
 // =================================================================
-// 1. ESTRUTURA DE DADOS MODIFICADA
+// 1. ESTRUTURA DE DADOS
 // =================================================================
 
 typedef struct
 {
-    char nome[50];   // NOVO: Campo para armazenar o nome do paciente
+    char nome[50];   // Campo para armazenar o nome do paciente
     int pas;         // Pressao Arterial Sistolica
     int pad;         // Pressao Arterial Diastolica
     float pp;        // Pressao de Pulso
@@ -32,11 +32,11 @@ void cabecalho()
 }
 
 // Funcao: calcular pressões e classificacao
-// Esta funcao recebe um ponteiro para a struct 'pressao' e preenche os campos calculados (PP, PAM e classe).
+// Recebe um ponteiro para a struct 'pressao' e preenche os campos calculados.
 void calcularPressao(pressao *p)
 {
     // Formula para Pressao de Pulso (PP)
-    p->pp = p->pas - p->pad;
+    p->pp = (float)(p->pas - p->pad);
     // Formula para Pressao Arterial Media (PAM)
     p->pam = (p->pas + 2 * p->pad) / 3.0;
 
@@ -59,6 +59,7 @@ void calcularPressao(pressao *p)
     }
     else
     {
+        // Caso de seguranca (ex: erro de digitacao ou isolada)
         strcpy(p->classe, "Indefinida");
     }
 }
@@ -68,9 +69,8 @@ void adicionarRegistro(pressao *novo_registro, pressao historico[], int *contado
 {
     if (*contador < MAX_HISTORICO)
     {
-        // Copia a struct temporaria para a proxima posicao livre do array
         historico[*contador] = *novo_registro;
-        (*contador)++; // Incrementa o contador de registros
+        (*contador)++;
         printf("\nRegistro adicionado ao historico com sucesso!\n\n");
     }
     else
@@ -104,75 +104,64 @@ void exibirHistorico(pressao historico[], int contador)
 }
 
 // =================================================================
-// 3. NOVAS FUNCOES QUE RETORNAM VALORES
+// 3. FUNCOES ESTATISTICAS
 // =================================================================
 
-// FUNCAO 1: Calcula e retorna a media das PAMs (Pressao Arterial Media) no historico.
+// FUNCAO 1: Media das PAMs
 float calcularMediaPAM(pressao historico[], int contador)
 {
-    if (contador == 0)
-    {
-        return 0.0; // Retorna 0 se nao houver dados
-    }
+    if (contador == 0) return 0.0;
 
     float soma_pam = 0.0;
     for (int i = 0; i < contador; i++)
     {
         soma_pam += historico[i].pam;
     }
-
-    return soma_pam / contador; // Retorna a media
+    return soma_pam / contador;
 }
 
-// FUNCAO 2: Conta e retorna o numero de registros que correspondem a uma classificacao especifica.
+// FUNCAO 2: Contar Classificacao
 int contarClassificacao(pressao historico[], int contador, const char *classificacao)
 {
     int contagem = 0;
     for (int i = 0; i < contador; i++)
     {
-        // strncmp: compara strings (classe do historico vs. a classificacao buscada)
         if (strncmp(historico[i].classe, classificacao, 30) == 0)
         {
             contagem++;
         }
     }
-    return contagem; // Retorna o total de ocorrencias
+    return contagem;
 }
 
-// FUNCAO 3: Encontra e retorna o INDICE do registro com a maior PAS (Pressao Arterial Sistolica).
+// FUNCAO 3: Maior PAS
 int encontrarRegistroMaxPAS(pressao historico[], int contador)
 {
-    if (contador == 0)
-    {
-        return -1; // Retorna -1 para indicar que o historico esta vazio
-    }
+    if (contador == 0) return -1;
 
     int indice_max = 0;
-    int max_pas = historico[0].pas; // Inicializa com o primeiro registro
+    int max_pas = historico[0].pas;
 
-    for (int i = 1; i < contador; i++) // Comeca do segundo (i=1)
+    for (int i = 1; i < contador; i++)
     {
         if (historico[i].pas > max_pas)
         {
             max_pas = historico[i].pas;
-            indice_max = i; // Armazena o indice do maior valor encontrado
+            indice_max = i;
         }
     }
-    return indice_max; // Retorna o indice do registro com a PAS mais alta
+    return indice_max;
 }
 
 // =================================================================
-// 4. FUNCAO PRINCIPAL (MAIN)
+// 4. FUNCAO PRINCIPAL
 // =================================================================
 
 int main()
 {
     int opcao;
-    // Variavel temporaria para receber os dados antes de adicionar ao historico
     pressao temp_paciente;
     FILE *arquivo;
-
-    // Array principal para armazenar todos os registros e contador de registros
     pressao historico[MAX_HISTORICO];
     int contador_registros = 0;
 
@@ -180,12 +169,11 @@ int main()
 
     do
     {
-
         printf("========== MENU ==========\n");
         printf("1 - Inserir novo registro manualmente\n");
         printf("2 - Importar dados de um arquivo TXT (dados.txt)\n");
         printf("3 - Exibir HISTORICO de registros\n");
-        printf("4 - Estatisticas e Analise (Novas Funcoes)\n"); // NOVO: Opcao para usar as novas funcoes
+        printf("4 - Estatisticas e Analise\n");
         printf("5 - Salvar relatorio COMPLETO\n");
         printf("6 - Sair\n");
         printf("Escolha uma opcao: ");
@@ -193,11 +181,17 @@ int main()
 
         switch (opcao)
         {
-
-        case 1: // Inserção manual
+        case 1: // Inserção manual CORRIGIDA
             printf("\n--- Novo Registro ---\n");
-            printf("Digite o Nome do Paciente (sem espacos): ");
-            scanf("%s", temp_paciente.nome); // Leitura do nome
+            
+            // CORRECAO: Limpeza do buffer do teclado antes de ler string
+            // Isso consome o 'enter' que sobrou do scanf da opcao
+            while(getchar() != '\n'); 
+
+            printf("Digite o Nome do Paciente: ");
+            // CORRECAO: Lê até encontrar uma quebra de linha (permite espaços)
+            // O %49 limita a leitura para evitar estourar o vetor 'nome'
+            scanf("%49[^\n]", temp_paciente.nome);
 
             printf("Digite a PAS: ");
             scanf("%d", &temp_paciente.pas);
@@ -205,40 +199,41 @@ int main()
             printf("Digite a PAD: ");
             scanf("%d", &temp_paciente.pad);
 
-            // Calcula PP, PAM e Classificacao para o registro temporario
             calcularPressao(&temp_paciente);
-            // Adiciona o registro completo ao array historico
             adicionarRegistro(&temp_paciente, historico, &contador_registros);
             break;
 
-        case 2: // Importa TXT (Ajustado para ler nome, PAS e PAD. Assume 'dados.txt' existe.)
+        case 2: // Importa TXT
             arquivo = fopen("dados.txt", "r");
             if (arquivo == NULL)
             {
-                printf("Erro ao abrir o arquivo 'dados.txt'! Certifique-se de que ele existe e contem: Nome PAS PAD\n\n");
+                printf("Erro ao abrir 'dados.txt'! Certifique-se de que ele existe.\n");
+                printf("Formato esperado: Nome_Sem_Espaco PAS PAD\n\n");
                 break;
             }
 
-            // Leitura: NOME PAS PAD
-            if (fscanf(arquivo, "%s %d %d", temp_paciente.nome, &temp_paciente.pas, &temp_paciente.pad) == 3)
+            // CORRECAO: Adicionado %49s para segurança
+            // Nota: Para arquivos simples, recomenda-se usar nomes sem espaço (ex: Maria_Luisa)
+            while (fscanf(arquivo, "%49s %d %d", temp_paciente.nome, &temp_paciente.pas, &temp_paciente.pad) == 3)
             {
-                // Se a leitura foi bem-sucedida, calcula e adiciona
                 calcularPressao(&temp_paciente);
                 adicionarRegistro(&temp_paciente, historico, &contador_registros);
             }
-            else
-            {
-                printf("Erro de leitura: O arquivo 'dados.txt' nao possui o formato esperado (Nome PAS PAD).\n");
+            
+            if (contador_registros == 0) {
+                 printf("Nenhum registro valido lido ou arquivo vazio.\n");
+            } else {
+                 printf("Importacao concluida.\n");
             }
 
             fclose(arquivo);
             break;
 
-        case 3: // Mostra Historico
+        case 3: 
             exibirHistorico(historico, contador_registros);
             break;
 
-        case 4: // Estatisticas e Analise (NOVA OPCAO)
+        case 4: 
             if (contador_registros == 0)
             {
                 printf("\nNao ha dados no historico para calcular estatisticas.\n\n");
@@ -246,12 +241,9 @@ int main()
             }
 
             printf("\n==== RELATORIO ESTATISTICO ====\n");
-
-            // USO DA FUNCAO 1: calcularMediaPAM()
             float media_pam = calcularMediaPAM(historico, contador_registros);
-            printf("Media da Pressao Arterial Media (PAM) de todos os registros: %.2f mmHg\n\n", media_pam);
+            printf("Media da PAM: %.2f mmHg\n\n", media_pam);
 
-            // USO DA FUNCAO 2: contarClassificacao()
             printf("--- Contagem por Classificacao ---\n");
             printf("Normal: %d\n", contarClassificacao(historico, contador_registros, "Normal"));
             printf("Elevada: %d\n", contarClassificacao(historico, contador_registros, "Elevada"));
@@ -259,12 +251,10 @@ int main()
             printf("Estagio 2: %d\n", contarClassificacao(historico, contador_registros, "Hipertensao Estagio 2"));
             printf("Indefinida: %d\n\n", contarClassificacao(historico, contador_registros, "Indefinida"));
 
-            // USO DA FUNCAO 3: encontrarRegistroMaxPAS()
             int indice_max = encontrarRegistroMaxPAS(historico, contador_registros);
             if (indice_max != -1)
             {
                 printf("--- Registro com a MAIOR PAS ---\n");
-                printf("Indice no Historico: %d\n", indice_max + 1);
                 printf("Paciente: %s\n", historico[indice_max].nome);
                 printf("PAS Maxima: %d\n", historico[indice_max].pas);
                 printf("Classificacao: %s\n", historico[indice_max].classe);
@@ -272,44 +262,35 @@ int main()
             printf("----------------------------------\n\n");
             break;
 
-        case 5: // Salva relatório COMPLETO
+        case 5: 
         {
             char nomeArquivo[50];
-            printf("Digite o nome do arquivo para o relatorio COMPLETO (ex: relatorio.txt): ");
+            printf("Nome do arquivo para salvar (ex: relatorio.txt): ");
             scanf("%s", nomeArquivo);
 
             FILE *arquivo_saida = fopen(nomeArquivo, "w");
-
             if (arquivo_saida == NULL)
             {
                 printf("Erro ao salvar arquivo!\n\n");
                 break;
             }
 
-            // Escreve cabecalho do relatorio
-            fprintf(arquivo_saida, "Relatorio de Analise Hemodinamica Completo (%d Registros)\n", contador_registros);
-            fprintf(arquivo_saida, "---------------------------------------------------------\n");
+            fprintf(arquivo_saida, "Relatorio de Analise Hemodinamica (%d Registros)\n", contador_registros);
+            fprintf(arquivo_saida, "------------------------------------------------\n");
 
-            // Itera sobre o array historico para salvar todos os registros
             for (int i = 0; i < contador_registros; i++)
             {
                 fprintf(arquivo_saida, "--- Registro %d ---\n", i + 1);
                 fprintf(arquivo_saida, "Paciente: %s\n", historico[i].nome);
-                fprintf(arquivo_saida, "PAS: %d\n", historico[i].pas);
-                fprintf(arquivo_saida, "PAD: %d\n", historico[i].pad);
-                fprintf(arquivo_saida, "PP: %.2f\n", historico[i].pp);
-                fprintf(arquivo_saida, "PAM: %.2f\n", historico[i].pam);
-                fprintf(arquivo_saida, "Classificacao: %s\n", historico[i].classe);
+                fprintf(arquivo_saida, "PAS: %d | PAD: %d\n", historico[i].pas, historico[i].pad);
+                fprintf(arquivo_saida, "PAM: %.2f | Classe: %s\n", historico[i].pam, historico[i].classe);
             }
 
-            // Adiciona as estatísticas ao relatório de saída
-            fprintf(arquivo_saida, "\n=========================================\n");
-            fprintf(arquivo_saida, "ESTATISTICAS GERAIS\n");
+            fprintf(arquivo_saida, "\nESTATISTICAS GERAIS\n");
             fprintf(arquivo_saida, "Media da PAM: %.2f\n", calcularMediaPAM(historico, contador_registros));
 
             fclose(arquivo_saida);
-
-            printf("Relatorio COMPLETO salvo como '%s' com sucesso!\n\n", nomeArquivo);
+            printf("Relatorio salvo com sucesso!\n\n");
         }
         break;
 
@@ -321,7 +302,7 @@ int main()
             printf("Opcao invalida!\n\n");
         }
 
-    } while (opcao != 6); // O loop agora termina na opcao 6
+    } while (opcao != 6);
 
     return 0;
 }
