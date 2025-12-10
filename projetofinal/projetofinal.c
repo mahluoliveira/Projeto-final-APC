@@ -110,7 +110,8 @@ void exibirHistorico(pressao historico[], int contador)
 // FUNCAO 1: Media das PAMs
 float calcularMediaPAM(pressao historico[], int contador)
 {
-    if (contador == 0) return 0.0;
+    if (contador == 0)
+        return 0.0;
 
     float soma_pam = 0.0;
     for (int i = 0; i < contador; i++)
@@ -137,7 +138,8 @@ int contarClassificacao(pressao historico[], int contador, const char *classific
 // FUNCAO 3: Maior PAS
 int encontrarRegistroMaxPAS(pressao historico[], int contador)
 {
-    if (contador == 0) return -1;
+    if (contador == 0)
+        return -1;
 
     int indice_max = 0;
     int max_pas = historico[0].pas;
@@ -183,10 +185,11 @@ int main()
         {
         case 1: // Inserção manual CORRIGIDA
             printf("\n--- Novo Registro ---\n");
-            
+
             // Limpeza do buffer do teclado antes de ler string
             // Isso consome o 'enter' que sobrou do scanf da opcao
-            while(getchar() != '\n'); 
+            while (getchar() != '\n')
+                ;
 
             printf("Digite o Nome do Paciente: ");
             // Lê até encontrar uma quebra de linha (permite espaços)
@@ -212,28 +215,30 @@ int main()
                 break;
             }
 
-            // CORRECAO: Adicionado %49s para segurança
             // Nota: Para arquivos simples, recomenda-se usar nomes sem espaço (ex: Maria_Luisa)
             while (fscanf(arquivo, "%49s %d %d", temp_paciente.nome, &temp_paciente.pas, &temp_paciente.pad) == 3)
             {
                 calcularPressao(&temp_paciente);
                 adicionarRegistro(&temp_paciente, historico, &contador_registros);
             }
-            
-            if (contador_registros == 0) {
-                 printf("Nenhum registro valido lido ou arquivo vazio.\n");
-            } else {
-                 printf("Importacao concluida.\n");
+
+            if (contador_registros == 0)
+            {
+                printf("Nenhum registro valido lido ou arquivo vazio.\n");
+            }
+            else
+            {
+                printf("Importacao concluida.\n");
             }
 
             fclose(arquivo);
             break;
 
-        case 3: 
+        case 3:
             exibirHistorico(historico, contador_registros);
             break;
 
-        case 4: 
+        case 4:
             if (contador_registros == 0)
             {
                 printf("\nNao ha dados no historico para calcular estatisticas.\n\n");
@@ -262,7 +267,7 @@ int main()
             printf("----------------------------------\n\n");
             break;
 
-        case 5: 
+        case 5:
         {
             char nomeArquivo[50];
             printf("Nome do arquivo para salvar (ex: relatorio.txt): ");
