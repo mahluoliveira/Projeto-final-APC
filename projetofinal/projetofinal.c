@@ -184,12 +184,12 @@ int main()
         case 1: // Inserção manual CORRIGIDA
             printf("\n--- Novo Registro ---\n");
             
-            // CORRECAO: Limpeza do buffer do teclado antes de ler string
+            // Limpeza do buffer do teclado antes de ler string
             // Isso consome o 'enter' que sobrou do scanf da opcao
             while(getchar() != '\n'); 
 
             printf("Digite o Nome do Paciente: ");
-            // CORRECAO: Lê até encontrar uma quebra de linha (permite espaços)
+            // Lê até encontrar uma quebra de linha (permite espaços)
             // O %49 limita a leitura para evitar estourar o vetor 'nome'
             scanf("%49[^\n]", temp_paciente.nome);
 
